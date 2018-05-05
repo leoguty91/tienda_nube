@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace TiendaNube\Checkout\Service\Shipping;
 
 use Psr\Log\LoggerInterface;
+use TiendaNube\Checkout\Model\Store;
+use TiendaNube\Checkout\Service\Store\StoreServiceInterface;
 
 /**
  * Class AddressService
  *
  * @package TiendaNube\Checkout\Service\Shipping
  */
-class AddressService
+class AddressService implements StoreServiceInterface
 {
     /**
      * The database connection link
@@ -21,6 +23,10 @@ class AddressService
     private $connection;
 
     private $logger;
+    /**
+     * @var Store
+     */
+    private $store;
 
     /**
      * AddressService constructor.
@@ -32,6 +38,7 @@ class AddressService
     {
         $this->connection = $pdo;
         $this->logger = $logger;
+        $this->store = new Store();
     }
 
     /**
@@ -72,5 +79,23 @@ class AddressService
 
             return null;
         }
+    }
+
+    /**
+     * @param Store $store
+     */
+    public function setStore(Store $store): void
+    {
+        $this->store = $store;
+    }
+
+    /**
+     * Get the current store instance
+     *
+     * @return Store
+     */
+    public function getCurrentStore(): Store
+    {
+        return $this->store;
     }
 }
