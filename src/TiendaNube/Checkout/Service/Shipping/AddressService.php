@@ -5,15 +5,17 @@ declare(strict_types=1);
 namespace TiendaNube\Checkout\Service\Shipping;
 
 use Psr\Log\LoggerInterface;
-use TiendaNube\Checkout\Model\Store;
-use TiendaNube\Checkout\Service\Store\StoreServiceInterface;
+use TiendaNube\Checkout\Service\Address\AddressStrategyInterface;
+use TiendaNube\Checkout\Service\Address\ApiStrategy;
+use TiendaNube\Checkout\Service\Address\PdoStrategy;
+use TiendaNube\Checkout\Service\Store\StoreSingleton;
 
 /**
  * Class AddressService
  *
  * @package TiendaNube\Checkout\Service\Shipping
  */
-class AddressService implements StoreServiceInterface
+class AddressService
 {
     /**
      * The database connection link
@@ -23,10 +25,11 @@ class AddressService implements StoreServiceInterface
     private $connection;
 
     private $logger;
+
     /**
-     * @var Store
+     * @var AddressStrategyInterface
      */
-    private $store;
+    private $addressStrategy;
 
     /**
      * AddressService constructor.
@@ -38,7 +41,6 @@ class AddressService implements StoreServiceInterface
     {
         $this->connection = $pdo;
         $this->logger = $logger;
-        $this->store = new Store();
     }
 
     /**
@@ -61,16 +63,9 @@ class AddressService implements StoreServiceInterface
         $this->logger->debug('Getting address for the zipcode [' . $zip . '] from database');
 
         try {
-            // getting the address from database
-            $stmt = $this->connection->prepare('SELECT * FROM `addresses` WHERE `zipcode` = ?');
-            $stmt->execute([$zip]);
+            $this->configureStrategy();
 
-            // checking if the address exists
-            if ($stmt->rowCount() > 0) {
-                return $stmt->fetch(\PDO::FETCH_ASSOC);
-            }
-
-            return null;
+            return $this->addressStrategy->getAddressByZip($zip);
         } catch (\PDOException $ex) {
             $this->logger->error(
                 'An error occurred at try to fetch the address from the database, exception with message was caught: ' .
@@ -82,20 +77,14 @@ class AddressService implements StoreServiceInterface
     }
 
     /**
-     * @param Store $store
+     * Configure the strategy to use
      */
-    public function setStore(Store $store): void
+    private function configureStrategy()
     {
-        $this->store = $store;
-    }
-
-    /**
-     * Get the current store instance
-     *
-     * @return Store
-     */
-    public function getCurrentStore(): Store
-    {
-        return $this->store;
+        if (StoreSingleton::instance()->getCurrentStore()->isBetaTester()) {
+            $this->addressStrategy = new ApiStrategy();
+        } else {
+            $this->addressStrategy = new PdoStrategy($this->connection);
+        }
     }
 }
