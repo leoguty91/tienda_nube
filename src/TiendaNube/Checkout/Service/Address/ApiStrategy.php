@@ -11,6 +11,8 @@ namespace TiendaNube\Checkout\Service\Address;
 
 class ApiStrategy implements AddressStrategyInterface
 {
+    const BASE_URL = "https://shipping.tiendanube.com/v1/";
+    const ADDRESS_ENDPOINT = "address/";
 
     /**
      * Get an address by its zipcode (CEP)
@@ -26,10 +28,12 @@ class ApiStrategy implements AddressStrategyInterface
      *
      * @param string $zip
      * @return array
+     * @throws \Httpful\Exception\ConnectionErrorException
      */
     public function getAddressByZip(string $zip):?array
     {
-        // TODO: Implement getAddressByZip() method.
-        return null;
+        $response = \Httpful\Request::get(self::BASE_URL . self::ADDRESS_ENDPOINT . $zip)->authenticateWith('bearer', 'YouShallNotPass')->send();
+        // Codigo de estado http: $response->code;
+        return $response->body;
     }
 }
