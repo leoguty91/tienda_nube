@@ -9,6 +9,7 @@
 namespace TiendaNube\Checkout\Service\Address;
 
 
+
 class ApiStrategy implements AddressStrategyInterface
 {
     const BASE_URL = "https://shipping.tiendanube.com/v1/";
@@ -28,12 +29,21 @@ class ApiStrategy implements AddressStrategyInterface
      *
      * @param string $zip
      * @return array
-     * @throws \Httpful\Exception\ConnectionErrorException
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function getAddressByZip(string $zip):?array
     {
-        $response = \Httpful\Request::get(self::BASE_URL . self::ADDRESS_ENDPOINT . $zip)->authenticateWith('bearer', 'YouShallNotPass')->send();
-        // Codigo de estado http: $response->code;
-        return $response->body;
+        $client = new \GuzzleHttp\Client();
+        $result = $client->request('GET', $this->buildUrl($zip));
+        return json_encode($result->getBody());
+    }
+
+    /**
+     * @param string $zip
+     * @return string
+     */
+    private function buildUrl(string $zip): string
+    {
+        return self::BASE_URL . self::ADDRESS_ENDPOINT . $zip;
     }
 }

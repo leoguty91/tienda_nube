@@ -4,9 +4,12 @@ namespace TiendaNube\Checkout\Service\Shipping;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use TiendaNube\Checkout\Service\Store\StoreSingleton;
 
 class AddressServiceTest extends TestCase
 {
+    protected $storeIsBetaTester;
+
     public function testGetExistentAddressByZipcode()
     {
         // expected address
@@ -100,4 +103,51 @@ class AddressServiceTest extends TestCase
         // testing
         $service->getAddressByZip('40010000');
     }
+    
+    public function testGetExistentAddressByZipcodeBeta()
+    {
+        // expected address
+        $address = [
+            'altitude' => 7.0,
+            'cep' => '40010000',
+            'latitude' => '-12.967192',
+            'longitude' => '-38.5101976',
+            'address' => 'Avenida da França',
+            'neighborhood' => 'Comércio',
+            'city' => [
+                'ddd' => 71,
+                'ibge' => '2927408',
+                'name' => 'Salvador'
+            ],
+            'state' => [
+                'acronym' => 'BA'
+            ],
+        ];
+
+        // mocking statement
+        $stmt = $this->createMock(\PDOStatement::class);
+        $stmt->method('rowCount')->willReturn(1);
+        $stmt->method('fetch')->willReturn($address);
+
+        // mocking pdo
+        $pdo = $this->createMock(\PDO::class);
+        $pdo->method('prepare')->willReturn($stmt);
+
+        // mocking logger
+        $logger = $this->createMock(LoggerInterface::class);
+
+        // store is beta
+//        StoreSingleton::instance()->getCurrentStore()->enableBetaTesting();
+
+        // creating service
+        $service = new AddressService($pdo,$logger);
+
+        // testing
+        $result = $service->getAddressByZip('40010000');
+
+        // asserts
+        $this->assertNotNull($result);
+        $this->assertEquals($address,$result);
+    }
+
 }
