@@ -14,6 +14,18 @@ class ApiStrategy implements AddressStrategyInterface
 {
     const BASE_URL = "https://shipping.tiendanube.com/v1/";
     const ADDRESS_ENDPOINT = "address/";
+    /** @var \GuzzleHttp\Client */
+    private $client;
+
+    /**
+     * ApiStrategy constructor.
+     * @param \GuzzleHttp\Client $client
+     */
+    public function __construct(\GuzzleHttp\Client $client)
+    {
+        $this->client = $client;
+    }
+
 
     /**
      * Get an address by its zipcode (CEP)
@@ -33,9 +45,8 @@ class ApiStrategy implements AddressStrategyInterface
      */
     public function getAddressByZip(string $zip):?array
     {
-        $client = new \GuzzleHttp\Client();
-        $result = $client->request('GET', $this->buildUrl($zip));
-        return json_encode($result->getBody());
+        $result = $this->client->request('GET', $this->buildUrl($zip));
+        return json_decode((string)$result->getBody(), true);
     }
 
     /**

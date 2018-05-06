@@ -103,7 +103,7 @@ class AddressServiceTest extends TestCase
         // testing
         $service->getAddressByZip('40010000');
     }
-    
+
     public function testGetExistentAddressByZipcodeBeta()
     {
         // expected address
@@ -124,23 +124,24 @@ class AddressServiceTest extends TestCase
             ],
         ];
 
-        // mocking statement
-        $stmt = $this->createMock(\PDOStatement::class);
-        $stmt->method('rowCount')->willReturn(1);
-        $stmt->method('fetch')->willReturn($address);
-
         // mocking pdo
         $pdo = $this->createMock(\PDO::class);
-        $pdo->method('prepare')->willReturn($stmt);
 
         // mocking logger
         $logger = $this->createMock(LoggerInterface::class);
 
+        // mocking client http and response
+        $response = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+        $response->method('getBody')->willReturn(json_encode($address));
+        $clientHttp = $this->createMock(\GuzzleHttp\Client::class);
+        $clientHttp->method('request')->willReturn($response);
+
         // store is beta
-//        StoreSingleton::instance()->getCurrentStore()->enableBetaTesting();
+        StoreSingleton::instance()->getCurrentStore()->enableBetaTesting();
 
         // creating service
         $service = new AddressService($pdo,$logger);
+        $service->setClientHttp($clientHttp);
 
         // testing
         $result = $service->getAddressByZip('40010000');

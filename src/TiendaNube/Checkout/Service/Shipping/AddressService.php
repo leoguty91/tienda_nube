@@ -25,7 +25,7 @@ class AddressService
     private $connection;
 
     private $logger;
-
+    private $clientHttp;
     /**
      * @var AddressStrategyInterface
      */
@@ -41,6 +41,7 @@ class AddressService
     {
         $this->connection = $pdo;
         $this->logger = $logger;
+        $this->clientHttp = new \GuzzleHttp\Client();
     }
 
     /**
@@ -82,9 +83,18 @@ class AddressService
     private function configureStrategy()
     {
         if (StoreSingleton::instance()->getCurrentStore()->isBetaTester()) {
-            $this->addressStrategy = new ApiStrategy();
+            $this->addressStrategy = new ApiStrategy($this->clientHttp);
         } else {
             $this->addressStrategy = new PdoStrategy($this->connection);
         }
     }
+
+    /**
+     * @param mixed $clientHttp
+     */
+    public function setClientHttp($clientHttp): void
+    {
+        $this->clientHttp = $clientHttp;
+    }
+
 }
