@@ -232,4 +232,22 @@ class AddressServiceTest extends TestCase
         $service->getAddressByZip('40010000');
     }
 
+    protected function setUp()/* The :void return type declaration that should be here would cause a BC issue */
+    {
+        parent::setUp();
+        $this->storeIsBetaTester = StoreSingleton::instance()->getCurrentStore()->isBetaTester();
+        // Los tests previos estan pensados para trabajar sin ser beta
+        StoreSingleton::instance()->getCurrentStore()->disableBetaTesting();
+    }
+
+    protected function tearDown()/* The :void return type declaration that should be here would cause a BC issue */
+    {
+        parent::tearDown();
+        // Restaure el estado de store
+        if ($this->storeIsBetaTester) {
+            StoreSingleton::instance()->getCurrentStore()->enableBetaTesting();
+        } else {
+            StoreSingleton::instance()->getCurrentStore()->disableBetaTesting();
+        }
+    }
 }
