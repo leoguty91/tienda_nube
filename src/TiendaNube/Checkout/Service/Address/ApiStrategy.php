@@ -45,8 +45,17 @@ class ApiStrategy implements AddressStrategyInterface
      */
     public function getAddressByZip(string $zip):?array
     {
-        $result = $this->client->request('GET', $this->buildUrl($zip));
-        return json_decode((string)$result->getBody(), true);
+        $response = $this->client->request('GET', $this->buildUrl($zip));
+        $code = $response->getStatusCode();
+        switch ($code) {
+            case 200:
+                $result = json_decode((string)$response->getBody(), true);
+                break;
+            case 404:
+                $result = null;
+                break;
+        }
+        return $result;
     }
 
     /**

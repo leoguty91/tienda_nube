@@ -132,6 +132,7 @@ class AddressServiceTest extends TestCase
 
         // mocking client http and response
         $response = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+        $response->method('getStatusCode')->willReturn(200);
         $response->method('getBody')->willReturn(json_encode($address));
         $clientHttp = $this->createMock(\GuzzleHttp\Client::class);
         $clientHttp->method('request')->willReturn($response);
@@ -149,6 +150,34 @@ class AddressServiceTest extends TestCase
         // asserts
         $this->assertNotNull($result);
         $this->assertEquals($address,$result);
+    }
+
+    public function testGetNonexistentAddressByZipcodeBeta()
+    {
+        // mocking pdo
+        $pdo = $this->createMock(\PDO::class);
+
+        // mocking logger
+        $logger = $this->createMock(LoggerInterface::class);
+
+        // mocking client http and response
+        $response = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+        $response->method('getStatusCode')->willReturn(404);
+        $clientHttp = $this->createMock(\GuzzleHttp\Client::class);
+        $clientHttp->method('request')->willReturn($response);
+
+        // store is beta
+        StoreSingleton::instance()->getCurrentStore()->enableBetaTesting();
+
+        // creating service
+        $service = new AddressService($pdo,$logger);
+        $service->setClientHttp($clientHttp);
+
+        // testing
+        $result = $service->getAddressByZip('40010001');
+
+        // asserts
+        $this->assertNull($result);
     }
 
 }
