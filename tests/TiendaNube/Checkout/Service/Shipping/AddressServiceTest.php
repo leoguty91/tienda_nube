@@ -180,4 +180,56 @@ class AddressServiceTest extends TestCase
         $this->assertNull($result);
     }
 
+    public function testGetAddressByZipcodeWithHttpClientExceptionBeta()
+    {
+        // mocking pdo
+        $pdo = $this->createMock(\PDO::class);
+
+        // mocking logger
+        $logger = $this->createMock(LoggerInterface::class);
+
+        // mocking client http
+        $clientHttp = $this->createMock(\GuzzleHttp\Client::class);
+        $clientHttp->method('request')->willThrowException(new \GuzzleHttp\Exception\TransferException());
+
+        // store is beta
+        StoreSingleton::instance()->getCurrentStore()->enableBetaTesting();
+
+        // creating service
+        $service = new AddressService($pdo,$logger);
+        $service->setClientHttp($clientHttp);
+
+        // testing
+        $result = $service->getAddressByZip('40010000');
+
+        // asserts
+        $this->assertNull($result);
+    }
+
+    public function testGetAddressByZipcodeWithUncaughtExceptionBeta()
+    {
+        // expects
+        $this->expectException(\Exception::class);
+
+        // mocking pdo
+        $pdo = $this->createMock(\PDO::class);
+
+        // mocking logger
+        $logger = $this->createMock(LoggerInterface::class);
+
+        // mocking client http
+        $clientHttp = $this->createMock(\GuzzleHttp\Client::class);
+        $clientHttp->method('request')->willThrowException(new \Exception('An error occurred'));
+
+        // store is beta
+        StoreSingleton::instance()->getCurrentStore()->enableBetaTesting();
+
+        // creating service
+        $service = new AddressService($pdo,$logger);
+        $service->setClientHttp($clientHttp);
+
+        // testing
+        $service->getAddressByZip('40010000');
+    }
+
 }

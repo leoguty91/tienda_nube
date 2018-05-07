@@ -10,6 +10,8 @@ namespace TiendaNube\Checkout\Service\Address;
 
 
 
+use GuzzleHttp\Exception\GuzzleException;
+
 class ApiStrategy implements AddressStrategyInterface
 {
     const BASE_URL = "https://shipping.tiendanube.com/v1/";
@@ -41,10 +43,11 @@ class ApiStrategy implements AddressStrategyInterface
      *
      * @param string $zip
      * @return array
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws GuzzleException | \Exception
      */
     public function getAddressByZip(string $zip):?array
     {
+        $result = null;
         $response = $this->client->request('GET', $this->buildUrl($zip));
         $code = $response->getStatusCode();
         switch ($code) {
@@ -54,6 +57,8 @@ class ApiStrategy implements AddressStrategyInterface
             case 404:
                 $result = null;
                 break;
+            case 500:
+                throw new \Exception('Internal server error');
         }
         return $result;
     }

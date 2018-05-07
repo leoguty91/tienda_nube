@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TiendaNube\Checkout\Service\Shipping;
 
+use GuzzleHttp\Exception\TransferException;
 use Psr\Log\LoggerInterface;
 use TiendaNube\Checkout\Service\Address\AddressStrategyInterface;
 use TiendaNube\Checkout\Service\Address\ApiStrategy;
@@ -67,7 +68,7 @@ class AddressService
             $this->configureStrategy();
 
             return $this->addressStrategy->getAddressByZip($zip);
-        } catch (\PDOException $ex) {
+        } catch (\PDOException | TransferException $ex) {
             $this->logger->error(
                 'An error occurred at try to fetch the address from the database, exception with message was caught: ' .
                 $ex->getMessage()
